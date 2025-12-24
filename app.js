@@ -37,8 +37,16 @@ const quickActions = document.getElementById("quickActions");
 const userInput = document.getElementById("userInput");
 const chatForm = document.getElementById("chatForm");
 
-const OPENAI_API_KEY = window.__ENV__ && window.__ENV__.OPENAI_API_KEY;
+let OPENAI_API_KEY = window.__ENV__ && window.__ENV__.OPENAI_API_KEY;
 const OPENAI_MODEL = (window.__ENV__ && window.__ENV__.OPENAI_MODEL) || "gpt-4o-mini";
+
+// Prompt for API key if not set
+if (!OPENAI_API_KEY) {
+  const storedKey = localStorage.getItem("openai_api_key");
+  if (storedKey) {
+    OPENAI_API_KEY = storedKey;
+  }
+}
 
 // Toggle quick action button visibility.
 function setButtonsVisible(isVisible) {
@@ -212,6 +220,18 @@ function handleEscalationMessage(text) {
   }
 
   pushBotMessage("A human agent will reach out soon. Automated support remains paused.");
+}
+
+// Prompt user for API key if needed
+function promptForApiKey() {
+  const key = prompt("Please enter your OpenAI API key to enable AI features.\n\nYour key will be stored locally in your browser and never sent to our servers.\n\nYou can skip this to use basic features without AI.");
+  if (key && key.trim()) {
+    OPENAI_API_KEY = key.trim();
+    localStorage.setItem("openai_api_key", OPENAI_API_KEY);
+    pushBotMessage("API key saved! AI features are now enabled.");
+  } else {
+    pushBotMessage("Continuing without AI features. Some advanced functionality may be limited.");
+  }
 }
 
 // Call OpenAI only when a natural language response is needed.
@@ -513,3 +533,11 @@ if (quickActions) {
 
 setButtonsVisible(true);
 pushBotMessage("Welcome! Please choose how I can help you today.");
+
+// Prompt for API key on first visit if not set
+if (!OPENAI_API_KEY && !localStorage.getItem("api_key_prompted")) {
+  localStorage.setItem("api_key_prompted", "true");
+  setTimeout(() => {
+    promptForApiKey();
+  }, 1000);
+}
