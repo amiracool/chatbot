@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Customer Success Chatbot Demo</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Bright Support</p>
+          <h1>Access Your Support</h1>
+          <p class="subhead">Tell us what you need and we will guide you through it.</p>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <section class="chat">
+          <div id="chatWindow" class="chat-window"></div>
+          <div id="quickActions" class="quick-actions">
+            <button data-flow="order_status">Order status</button>
+            <button data-flow="cancel_refund">Cancellation or refund</button>
+            <button data-flow="upsell">Upsell recommendations</button>
+            <button data-flow="billing_issue">Account or billing issue</button>
+            <button data-flow="onboarding_feedback">Onboarding feedback</button>
+          </div>
+          <form id="chatForm" class="chat-input">
+            <input id="userInput" type="text" placeholder="Ask a question..." autocomplete="off" />
+            <button type="submit">Send</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
