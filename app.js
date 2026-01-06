@@ -19,6 +19,11 @@ const state = {
     availability: "",
   },
   awaitingField: null,
+  cancelRefund: {
+    awaitingEscalation: false,
+    awaitingReason: false,
+    reason: "",
+  },
   onboarding: {
     active: false,
     step: 0,
@@ -325,9 +330,46 @@ function handleCancellationFlow() {
   pushBotMessage(
     `Order ${latest.orderId} is currently ${latest.status.replace(/_/g, " ")}. ` +
       "To request a cancellation or refund, a specialist must review the order. " +
-      "Reply if you want me to escalate this request."
+      "Would you like to escalate this to a specialist? (Reply 'yes' to proceed)"
   );
-  completeFlow();
+  state.cancelRefund.awaitingEscalation = true;
+}
+
+// Handle cancellation/refund escalation flow responses
+function handleCancellationEscalation(text) {
+  const normalized = normalizeValue(text);
+
+  if (state.cancelRefund.awaitingEscalation && !state.cancelRefund.awaitingReason) {
+    if (normalized.includes("yes") || normalized.includes("escalate") || normalized.includes("human") || normalized.includes("specialist")) {
+      state.cancelRefund.awaitingEscalation = false;
+      state.cancelRefund.awaitingReason = true;
+      pushBotMessage("Please provide a brief reason for your cancellation or refund request.");
+      return true;
+    } else if (normalized.includes("no")) {
+      pushBotMessage("Understood. Is there anything else I can help you with?");
+      state.cancelRefund.awaitingEscalation = false;
+      completeFlow();
+      return true;
+    } else {
+      pushBotMessage("Please reply 'yes' to escalate to a specialist, or 'no' to cancel this request.");
+      return true;
+    }
+  }
+
+  if (state.cancelRefund.awaitingReason) {
+    state.cancelRefund.reason = text.trim();
+    state.cancelRefund.awaitingReason = false;
+    const latest = getLatestOrder(state.customerOrders);
+    pushBotMessage(
+      `Thank you. Your cancellation/refund request for order ${latest.orderId} has been escalated to a specialist. ` +
+      `Reason: "${state.cancelRefund.reason}". A specialist will contact you within 24-48 hours.`
+    );
+    state.cancelRefund.reason = "";
+    completeFlow();
+    return true;
+  }
+
+  return false;
 }
 
 // Provide billing or payment issue guidance from the latest order.
@@ -508,6 +550,14 @@ async function handleUserMessage(text) {
   if (state.flow === "onboarding_feedback" && state.onboarding.active) {
     await handleOnboardingFlow(text);
     return;
+  }
+
+  // Handle cancellation/refund escalation if awaiting response
+  if (state.flow === "cancel_refund" && (state.cancelRefund.awaitingEscalation || state.cancelRefund.awaitingReason)) {
+    const handled = handleCancellationEscalation(text);
+    if (handled) {
+      return;
+    }
   }
 
   const verified = await handleVerification(text);
