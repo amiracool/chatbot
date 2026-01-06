@@ -73,7 +73,7 @@ function pushUserMessage(text) {
   appendMessage("user", text);
 }
 
-// Normalize strings for reliable comparisons.
+// Normalise strings for reliable comparisons.
 function normalizeValue(value) {
   return (value || "").toLowerCase().replace(/\s+/g, " ").trim();
 }
@@ -149,6 +149,15 @@ function startFlow(flow) {
   state.flow = flow;
   setButtonsVisible(false);
   if (!state.verification.verified) {
+    const flowMessages = {
+      order_status: "I can help you check your order status.",
+      cancel_refund: "I can help you with cancellations and refunds.",
+      upsell: "Let me show you some product recommendations.",
+      billing_issue: "I can help you with billing and account issues.",
+      onboarding_feedback: "I'd love to hear your onboarding feedback.",
+    };
+    const introMessage = flowMessages[flow] || "I can help you with that.";
+    pushBotMessage(`${introMessage} First, I need to verify your account.`);
     askForVerificationField("name");
     return;
   }
@@ -336,7 +345,7 @@ function handleBillingIssueFlow() {
   completeFlow();
 }
 
-// Recommend products using the public catalog endpoint.
+// Recommend products using the public catalogue endpoint.
 async function handleUpsellFlow() {
   const response = await fetch(PRODUCT_ENDPOINT);
   if (!response.ok) {
